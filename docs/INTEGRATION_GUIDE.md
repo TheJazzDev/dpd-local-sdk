@@ -27,7 +27,7 @@ Before you begin, ensure you have:
 ### 1. Install the SDK
 
 ```bash
-npm install @your-org/dpd-local-sdk
+npm install @jazzdev/dpd-local-sdk
 ```
 
 ### 2. Install Peer Dependencies
@@ -69,9 +69,9 @@ NODE_ENV=production
 Run this once to generate your encryption key:
 
 ```typescript
-import { generateEncryptionKey } from "@your-org/dpd-local-sdk";
+import { generateEncryptionKey } from '@jazzdev/dpd-local-sdk';
 
-console.log("DPD_ENCRYPTION_KEY=" + generateEncryptionKey());
+console.log('DPD_ENCRYPTION_KEY=' + generateEncryptionKey());
 ```
 
 ### 3. Create DPD Configuration
@@ -79,7 +79,7 @@ console.log("DPD_ENCRYPTION_KEY=" + generateEncryptionKey());
 Create a configuration file (e.g., `lib/dpd-config.ts`):
 
 ```typescript
-import { createDPDConfig } from "@your-org/dpd-local-sdk";
+import { createDPDConfig } from '@jazzdev/dpd-local-sdk';
 
 export const dpdConfig = createDPDConfig({
   credentials: {
@@ -88,20 +88,20 @@ export const dpdConfig = createDPDConfig({
     password: process.env.DPD_PASSWORD!,
   },
   business: {
-    name: "Your Business Name",
+    name: 'Your Business Name',
     collectionAddress: {
-      organisation: "Your Company Ltd",
-      property: "Your Property",
-      street: "Your Street",
-      locality: "",
-      town: "Your Town",
-      county: "Your County",
-      postcode: "YOUR POSTCODE",
-      countryCode: "GB",
+      organisation: 'Your Company Ltd',
+      property: 'Your Property',
+      street: 'Your Street',
+      locality: '',
+      town: 'Your Town',
+      county: 'Your County',
+      postcode: 'YOUR POSTCODE',
+      countryCode: 'GB',
     },
-    contactName: "Shipping Department",
-    contactPhone: "+44XXXXXXXXXX",
-    contactEmail: "shipping@yourcompany.com",
+    contactName: 'Shipping Department',
+    contactPhone: '+44XXXXXXXXXX',
+    contactEmail: 'shipping@yourcompany.com',
   },
   // Optional: Customize pricing
   pricing: {
@@ -121,41 +121,44 @@ Create a file `lib/dpd-database-adapter.ts`:
 #### Example: Firestore
 
 ```typescript
-import { DatabaseAdapter } from "@your-org/dpd-local-sdk";
-import { getFirestore, Timestamp } from "firebase-admin/firestore";
+import { DatabaseAdapter } from '@jazzdev/dpd-local-sdk';
+import { getFirestore, Timestamp } from 'firebase-admin/firestore';
 
 const db = getFirestore();
 
 export const dpdDatabaseAdapter: DatabaseAdapter = {
   async getOrder(orderId: string) {
-    const doc = await db.collection("orders").doc(orderId).get();
-    if (!doc.exists) throw new Error("Order not found");
+    const doc = await db.collection('orders').doc(orderId).get();
+    if (!doc.exists) throw new Error('Order not found');
     return { id: doc.id, ...doc.data() };
   },
 
   async updateOrder(orderId: string, data: any) {
-    await db.collection("orders").doc(orderId).update({
-      ...data,
-      updatedAt: Timestamp.now(),
-    });
+    await db
+      .collection('orders')
+      .doc(orderId)
+      .update({
+        ...data,
+        updatedAt: Timestamp.now(),
+      });
   },
 
   async getSavedAddresses(userId: string) {
     const snapshot = await db
-      .collection("savedAddresses")
-      .where("userId", "==", userId)
+      .collection('savedAddresses')
+      .where('userId', '==', userId)
       .get();
     return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
   },
 
   async getSavedAddress(addressId: string) {
-    const doc = await db.collection("savedAddresses").doc(addressId).get();
+    const doc = await db.collection('savedAddresses').doc(addressId).get();
     if (!doc.exists) return null;
     return { id: doc.id, ...doc.data() };
   },
 
   async createSavedAddress(address) {
-    const ref = await db.collection("savedAddresses").add({
+    const ref = await db.collection('savedAddresses').add({
       ...address,
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
@@ -165,23 +168,23 @@ export const dpdDatabaseAdapter: DatabaseAdapter = {
 
   async updateSavedAddress(addressId: string, data) {
     await db
-      .collection("savedAddresses")
+      .collection('savedAddresses')
       .doc(addressId)
       .update({ ...data, updatedAt: Timestamp.now() });
   },
 
   async deleteSavedAddress(addressId: string) {
-    await db.collection("savedAddresses").doc(addressId).delete();
+    await db.collection('savedAddresses').doc(addressId).delete();
   },
 
   async createDPDLog(log) {
-    const ref = await db.collection("dpdLogs").add(log);
+    const ref = await db.collection('dpdLogs').add(log);
     return ref.id;
   },
 
   async getDPDLogs(filters) {
-    let query = db.collection("dpdLogs");
-    if (filters.orderId) query = query.where("orderId", "==", filters.orderId);
+    let query = db.collection('dpdLogs');
+    if (filters.orderId) query = query.where('orderId', '==', filters.orderId);
     const snapshot = await query.limit(filters.limit || 100).get();
     return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
   },
@@ -191,24 +194,26 @@ export const dpdDatabaseAdapter: DatabaseAdapter = {
 #### Example: MongoDB
 
 ```typescript
-import { DatabaseAdapter } from "@your-org/dpd-local-sdk";
-import { MongoClient } from "mongodb";
+import { DatabaseAdapter } from '@jazzdev/dpd-local-sdk';
+import { MongoClient } from 'mongodb';
 
 const client = new MongoClient(process.env.MONGODB_URI!);
 const db = client.db();
 
 export const dpdDatabaseAdapter: DatabaseAdapter = {
   async getOrder(orderId: string) {
-    const order = await db.collection("orders").findOne({ _id: orderId });
-    if (!order) throw new Error("Order not found");
+    const order = await db.collection('orders').findOne({ _id: orderId });
+    if (!order) throw new Error('Order not found');
     return { id: order._id, ...order };
   },
 
   async updateOrder(orderId: string, data: any) {
-    await db.collection("orders").updateOne(
-      { _id: orderId },
-      { $set: { ...data, updatedAt: new Date() } }
-    );
+    await db
+      .collection('orders')
+      .updateOne(
+        { _id: orderId },
+        { $set: { ...data, updatedAt: new Date() } }
+      );
   },
 
   // ... implement other methods similarly
@@ -222,8 +227,8 @@ Create a file `lib/dpd-storage-adapter.ts`:
 #### Example: Firebase Storage
 
 ```typescript
-import { StorageAdapter } from "@your-org/dpd-local-sdk";
-import { getStorage } from "firebase-admin/storage";
+import { StorageAdapter } from '@jazzdev/dpd-local-sdk';
+import { getStorage } from 'firebase-admin/storage';
 
 const storage = getStorage();
 const bucket = storage.bucket();
@@ -238,7 +243,7 @@ export const dpdStorageAdapter: StorageAdapter = {
 
   async getLabel(fileName: string) {
     const [files] = await bucket.getFiles({ prefix: `dpd-labels/${fileName}` });
-    if (files.length === 0) throw new Error("Label not found");
+    if (files.length === 0) throw new Error('Label not found');
     const file = files[0];
     return `https://storage.googleapis.com/${bucket.name}/${file.name}`;
   },
@@ -253,10 +258,14 @@ export const dpdStorageAdapter: StorageAdapter = {
 #### Example: AWS S3
 
 ```typescript
-import { StorageAdapter } from "@your-org/dpd-local-sdk";
-import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
+import { StorageAdapter } from '@jazzdev/dpd-local-sdk';
+import {
+  S3Client,
+  PutObjectCommand,
+  GetObjectCommand,
+} from '@aws-sdk/client-s3';
 
-const s3 = new S3Client({ region: "us-east-1" });
+const s3 = new S3Client({ region: 'us-east-1' });
 const bucketName = process.env.S3_BUCKET!;
 
 export const dpdStorageAdapter: StorageAdapter = {
@@ -266,7 +275,7 @@ export const dpdStorageAdapter: StorageAdapter = {
         Bucket: bucketName,
         Key: `dpd-labels/${fileName}`,
         Body: labelData,
-        ContentType: fileName.endsWith(".html") ? "text/html" : "text/plain",
+        ContentType: fileName.endsWith('.html') ? 'text/html' : 'text/plain',
       })
     );
     return `https://${bucketName}.s3.amazonaws.com/dpd-labels/${fileName}`;
@@ -293,10 +302,10 @@ export const dpdStorageAdapter: StorageAdapter = {
 
 ```typescript
 // app/api/shipping/create/route.ts
-import { createCompleteShipment } from "@your-org/dpd-local-sdk";
-import { dpdConfig } from "@/lib/dpd-config";
-import { dpdDatabaseAdapter } from "@/lib/dpd-database-adapter";
-import { dpdStorageAdapter } from "@/lib/dpd-storage-adapter";
+import { createCompleteShipment } from '@jazzdev/dpd-local-sdk';
+import { dpdConfig } from '@/lib/dpd-config';
+import { dpdDatabaseAdapter } from '@/lib/dpd-database-adapter';
+import { dpdStorageAdapter } from '@/lib/dpd-storage-adapter';
 
 export async function POST(req: Request) {
   const { orderId, deliveryAddress, weight } = await req.json();
@@ -305,12 +314,12 @@ export async function POST(req: Request) {
     orderId,
     {
       orderRef: orderId,
-      service: "12", // Next Day
+      service: '12', // Next Day
       deliveryAddress,
       totalWeight: weight,
       numberOfParcels: 1,
       customerEmail: deliveryAddress.contactEmail,
-      collectionDate: new Date().toISOString().split("T")[0],
+      collectionDate: new Date().toISOString().split('T')[0],
     },
     dpdConfig,
     dpdDatabaseAdapter,
@@ -330,25 +339,25 @@ export async function POST(req: Request) {
 ### 1. Test Connection
 
 ```typescript
-import { testDPDConnection } from "@your-org/dpd-local-sdk";
-import { dpdConfig } from "./lib/dpd-config";
+import { testDPDConnection } from '@jazzdev/dpd-local-sdk';
+import { dpdConfig } from './lib/dpd-config';
 
 const result = await testDPDConnection(dpdConfig.credentials);
-console.log(result.success ? "✅ Connected" : "❌ Failed");
+console.log(result.success ? '✅ Connected' : '❌ Failed');
 ```
 
 ### 2. Test Address Validation
 
 ```typescript
-import { validateDeliveryAddress } from "@your-org/dpd-local-sdk";
-import { dpdConfig } from "./lib/dpd-config";
+import { validateDeliveryAddress } from '@jazzdev/dpd-local-sdk';
+import { dpdConfig } from './lib/dpd-config';
 
 const result = await validateDeliveryAddress(
-  { postcode: "SW1A 2AA", town: "London" },
+  { postcode: 'SW1A 2AA', town: 'London' },
   dpdConfig.credentials
 );
 
-console.log(result.valid ? "✅ Valid" : "❌ Invalid");
+console.log(result.valid ? '✅ Valid' : '❌ Invalid');
 ```
 
 ### 3. Create Test Shipment
@@ -390,7 +399,7 @@ DPD_ENCRYPTION_KEY=XXXXX
 ### Error Monitoring
 
 ```typescript
-import { createCompleteShipment } from "@your-org/dpd-local-sdk";
+import { createCompleteShipment } from "@jazzdev/dpd-local-sdk";
 
 try {
   const result = await createCompleteShipment(...);
@@ -410,6 +419,6 @@ try {
 ## Support
 
 For issues or questions:
-- GitHub Issues: [Report a bug](https://github.com/your-org/dpd-local-sdk/issues)
-- Email: support@your-org.com
-- Documentation: [Full docs](https://docs.your-org.com/dpd-local-sdk)
+
+- GitHub Issues: [Report a bug](https://github.com/TheJazzDev/dpd-local-sdk.git/dpd-local-sdk/issues)
+- Email: babsman4ll@gmail.com

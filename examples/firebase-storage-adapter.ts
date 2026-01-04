@@ -5,18 +5,15 @@
  * for Firebase Storage (Admin SDK).
  */
 
-import { Storage } from "firebase-admin/storage";
-import type { StorageAdapter } from "@your-org/dpd-local-sdk";
+import { Storage } from 'firebase-admin/storage';
+import type { StorageAdapter } from '@jazzdev/dpd-local-sdk';
 
 /**
  * Firebase Storage Adapter
  * Use this on the server-side (Node.js, Next.js API routes, etc.)
  */
 export class FirebaseStorageAdapter implements StorageAdapter {
-  constructor(
-    private storage: Storage,
-    private bucketName?: string
-  ) {}
+  constructor(private storage: Storage, private bucketName?: string) {}
 
   async uploadLabel(labelData: string, fileName: string): Promise<string> {
     const bucket = this.bucketName
@@ -26,14 +23,12 @@ export class FirebaseStorageAdapter implements StorageAdapter {
     const file = bucket.file(`dpd-labels/${fileName}`);
 
     // Determine content type based on file extension
-    const contentType = fileName.endsWith(".html")
-      ? "text/html"
-      : "text/plain";
+    const contentType = fileName.endsWith('.html') ? 'text/html' : 'text/plain';
 
     await file.save(labelData, {
       contentType,
       metadata: {
-        cacheControl: "public, max-age=31536000", // 1 year
+        cacheControl: 'public, max-age=31536000', // 1 year
       },
     });
 

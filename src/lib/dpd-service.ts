@@ -4,17 +4,17 @@
  * High-level service functions that integrate all DPD functionality
  * Database-agnostic - requires adapters to be passed in
  *
- * @package @your-org/dpd-local-sdk
+ * @package @jazzdev/dpd-local-sdk
  */
 
-import { createShipment, generateLabel, validateAddress } from "./shipment";
-import { getGeoSession, testConnection } from "./auth";
+import { createShipment, generateLabel, validateAddress } from './shipment';
+import { getGeoSession, testConnection } from './auth';
 import {
   calculateDeliveryFee,
   calculateDPDCost,
   getNextCollectionDate,
   getEstimatedDeliveryDate,
-} from "../config";
+} from '../config';
 import type {
   DPDModuleConfig,
   DPDCredentials,
@@ -27,7 +27,7 @@ import type {
   DatabaseAdapter,
   StorageAdapter,
   ShippingData,
-} from "../types";
+} from '../types';
 
 // ============================================================================
 // Shipment Operations
@@ -64,7 +64,7 @@ import type {
  */
 export async function createCompleteShipment(
   orderId: string,
-  params: Omit<CreateShipmentParams, "orderId">,
+  params: Omit<CreateShipmentParams, 'orderId'>,
   config: DPDModuleConfig,
   dbAdapter: DatabaseAdapter,
   storageAdapter: StorageAdapter
@@ -90,7 +90,7 @@ export async function createCompleteShipment(
     const labelResult = await generateAndUploadLabel(
       shipmentResult.shipmentId,
       shipmentResult.consignmentNumber,
-      "thermal",
+      'thermal',
       config.credentials,
       storageAdapter
     );
@@ -103,30 +103,34 @@ export async function createCompleteShipment(
     }
 
     // 3. Calculate costs
-    const dpdCost = calculateDPDCost(params.totalWeight, params.service, config);
+    const dpdCost = calculateDPDCost(
+      params.totalWeight,
+      params.service,
+      config
+    );
     const customerCharge = calculateDeliveryFee(0, params.service, config);
 
     // 4. Create shipping data object
     const now = new Date();
     const shippingData: ShippingData = {
-      provider: "dpd",
+      provider: 'dpd',
       service: params.service,
       shipmentId: shipmentResult.shipmentId,
       consignmentNumber: shipmentResult.consignmentNumber,
       parcelNumber: shipmentResult.parcelNumber,
       trackingUrl: `https://www.dpdlocal.co.uk/service/tracking?parcel=${shipmentResult.parcelNumber}`,
       labelUrl: labelResult.labelUrl,
-      status: "label_generated",
+      status: 'label_generated',
       statusHistory: [
         {
-          status: "created",
+          status: 'created',
           timestamp: now,
-          message: "Shipment created with DPD",
+          message: 'Shipment created with DPD',
         },
         {
-          status: "label_generated",
+          status: 'label_generated',
           timestamp: now,
-          message: "Shipping label generated",
+          message: 'Shipping label generated',
         },
       ],
       cost: {
@@ -137,7 +141,7 @@ export async function createCompleteShipment(
       },
       weight: {
         total: params.totalWeight,
-        unit: "kg",
+        unit: 'kg',
       },
       parcels: params.numberOfParcels,
       collectionDate: params.collectionDate || getNextCollectionDate(),
@@ -160,7 +164,9 @@ export async function createCompleteShipment(
       );
       console.error(`   Error:`, updateError);
       throw new Error(
-        `Shipment created but failed to update order: ${updateError instanceof Error ? updateError.message : "Unknown error"}`
+        `Shipment created but failed to update order: ${
+          updateError instanceof Error ? updateError.message : 'Unknown error'
+        }`
       );
     }
 
@@ -174,8 +180,8 @@ export async function createCompleteShipment(
     console.error(`\n💥 Complete shipment creation failed:`, error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Unknown error",
-      errorCode: "COMPLETE_SHIPMENT_FAILED",
+      error: error instanceof Error ? error.message : 'Unknown error',
+      errorCode: 'COMPLETE_SHIPMENT_FAILED',
     };
   }
 }
@@ -193,7 +199,7 @@ export async function createCompleteShipment(
 export async function generateAndUploadLabel(
   shipmentId: string | number,
   consignmentNumber: string,
-  format: "thermal" | "a4" = "thermal",
+  format: 'thermal' | 'a4' = 'thermal',
   credentials: DPDCredentials,
   storageAdapter: StorageAdapter
 ): Promise<GenerateLabelResult> {
@@ -210,7 +216,7 @@ export async function generateAndUploadLabel(
 
     // 2. Generate file name
     const timestamp = Date.now();
-    const extension = format === "thermal" ? "txt" : "html";
+    const extension = format === 'thermal' ? 'txt' : 'html';
     const fileName = `${consignmentNumber}-${timestamp}.${extension}`;
 
     // 3. Upload to storage
@@ -227,7 +233,7 @@ export async function generateAndUploadLabel(
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Unknown error",
+      error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
 }
@@ -245,7 +251,7 @@ export async function validateDeliveryAddress(
 
 export async function saveAddress(
   userId: string,
-  address: Omit<SavedAddress, "id" | "userId" | "createdAt" | "updatedAt">,
+  address: Omit<SavedAddress, 'id' | 'userId' | 'createdAt' | 'updatedAt'>,
   credentials: DPDCredentials,
   dbAdapter: DatabaseAdapter
 ): Promise<string> {
@@ -256,7 +262,7 @@ export async function saveAddress(
   });
 
   const now = new Date();
-  const addressData: Omit<SavedAddress, "id"> = {
+  const addressData: Omit<SavedAddress, 'id'> = {
     ...address,
     userId,
     validated: validation.valid,
@@ -309,7 +315,7 @@ export async function getLabelUrl(
     const fileName = `${consignmentNumber}`;
     return await storageAdapter.getLabel(fileName);
   } catch (error) {
-    console.error("Error getting label URL:", error);
+    console.error('Error getting label URL:', error);
     return null;
   }
 }
@@ -317,7 +323,7 @@ export async function getLabelUrl(
 export async function regenerateLabel(
   shipmentId: string | number,
   consignmentNumber: string,
-  format: "thermal" | "a4" = "thermal",
+  format: 'thermal' | 'a4' = 'thermal',
   credentials: DPDCredentials,
   storageAdapter: StorageAdapter
 ): Promise<GenerateLabelResult> {
@@ -334,18 +340,14 @@ export async function regenerateLabel(
 // Utility Operations
 // ============================================================================
 
-export async function testDPDConnection(
-  credentials: DPDCredentials
-): Promise<{
+export async function testDPDConnection(credentials: DPDCredentials): Promise<{
   success: boolean;
   message: string;
 }> {
   return await testConnection(credentials);
 }
 
-export async function getAuthStatus(
-  credentials: DPDCredentials
-): Promise<{
+export async function getAuthStatus(credentials: DPDCredentials): Promise<{
   authenticated: boolean;
   expiresAt?: Date | null;
 }> {

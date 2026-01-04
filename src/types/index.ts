@@ -4,7 +4,7 @@
  * Comprehensive type definitions for DPD Local API integration
  * Based on DPD Local API Specification v1.0
  *
- * @package @your-org/dpd-local-sdk
+ * @package @jazzdev/dpd-local-sdk
  * @version 1.0.0
  */
 
@@ -78,25 +78,25 @@ export interface PricingConfig {
 }
 
 export interface LabelConfig {
-  format: "thermal" | "a4";
+  format: 'thermal' | 'a4';
   printer: {
     model: string; // "TSC-DA210"
     dpi: number; // 203
     speed: number; // 6 ips
-    connection: "USB" | "Network";
+    connection: 'USB' | 'Network';
   };
 }
 
 export interface NotificationConfig {
   email: {
     enabled: boolean;
-    provider: "resend" | "sendgrid" | "ses";
+    provider: 'resend' | 'sendgrid' | 'ses';
     fromEmail: string;
     adminEmail: string;
   };
   sms: {
     enabled: boolean;
-    provider: "dpd"; // DPD handles SMS
+    provider: 'dpd'; // DPD handles SMS
   };
 }
 
@@ -104,7 +104,7 @@ export interface NotificationConfig {
 // DPD API Types
 // ============================================================================
 
-export type DPDServiceCode = "12" | "07"; // Next Day (12), By 12 (07)
+export type DPDServiceCode = '12' | '07'; // Next Day (12), By 12 (07)
 
 export interface DPDAuthResponse {
   data: {
@@ -224,7 +224,7 @@ export interface DPDError {
 // ============================================================================
 
 export interface ShippingData {
-  provider: "dpd";
+  provider: 'dpd';
   service: DPDServiceCode;
   shipmentId: string | number; // DPD shipment ID (required for label regeneration)
   consignmentNumber: string; // 10-digit consignment reference
@@ -241,7 +241,7 @@ export interface ShippingData {
   };
   weight: {
     total: number; // kg
-    unit: "kg";
+    unit: 'kg';
   };
   parcels: number;
   collectionDate: string;
@@ -252,14 +252,14 @@ export interface ShippingData {
 }
 
 export type ShipmentStatus =
-  | "created"
-  | "label_generated"
-  | "collected"
-  | "in_transit"
-  | "out_for_delivery"
-  | "delivered"
-  | "failed"
-  | "cancelled";
+  | 'created'
+  | 'label_generated'
+  | 'collected'
+  | 'in_transit'
+  | 'out_for_delivery'
+  | 'delivered'
+  | 'failed'
+  | 'cancelled';
 
 export interface ShipmentStatusUpdate {
   status: ShipmentStatus;
@@ -294,12 +294,12 @@ export interface DPDLogDocument {
   orderId: string;
   consignmentNumber?: string;
   operation:
-    | "auth"
-    | "validate_address"
-    | "create_shipment"
-    | "generate_label"
-    | "track_shipment"
-    | "webhook";
+    | 'auth'
+    | 'validate_address'
+    | 'create_shipment'
+    | 'generate_label'
+    | 'track_shipment'
+    | 'webhook';
   request: {
     endpoint: string;
     method: string;
@@ -351,7 +351,7 @@ export interface CreateShipmentResult {
 
 export interface GenerateLabelParams {
   shipmentId: string | number; // DPD API requires shipmentId, not consignment number
-  format: "thermal" | "a4";
+  format: 'thermal' | 'a4';
 }
 
 export interface GenerateLabelResult {
@@ -397,7 +397,7 @@ export interface DatabaseAdapter {
   // Saved Addresses
   getSavedAddresses(userId: string): Promise<SavedAddress[]>;
   getSavedAddress(addressId: string): Promise<SavedAddress | null>;
-  createSavedAddress(address: Omit<SavedAddress, "id">): Promise<string>;
+  createSavedAddress(address: Omit<SavedAddress, 'id'>): Promise<string>;
   updateSavedAddress(
     addressId: string,
     data: Partial<SavedAddress>
@@ -405,7 +405,7 @@ export interface DatabaseAdapter {
   deleteSavedAddress(addressId: string): Promise<void>;
 
   // DPD Logs
-  createDPDLog(log: Omit<DPDLogDocument, "id">): Promise<string>;
+  createDPDLog(log: Omit<DPDLogDocument, 'id'>): Promise<string>;
   getDPDLogs(filters: LogFilters): Promise<DPDLogDocument[]>;
 }
 
@@ -418,7 +418,7 @@ export interface StorageAdapter {
 export interface LogFilters {
   orderId?: string;
   consignmentNumber?: string;
-  operation?: DPDLogDocument["operation"];
+  operation?: DPDLogDocument['operation'];
   success?: boolean;
   startDate?: Date;
   endDate?: Date;

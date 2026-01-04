@@ -1,6 +1,6 @@
 {
-  "name": "@your-org/dpd-local-sdk",
-  "version": "1.0.0",
+  "name": "@jazzdev/dpd-local-sdk",
+  "version": "1.0.1",
   "description": "TypeScript SDK for DPD Local shipping API integration - database-agnostic and framework-independent",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -38,16 +38,16 @@
     "sdk",
     "api-client"
   ],
-  "author": "Your Name <your.email@example.com>",
+  "author": "Jazzdev <babsman4all@gmail.com>",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/your-org/dpd-local-sdk.git"
+    "url": "https://github.com/TheJazzDev/dpd-local-sdk.git"
   },
   "bugs": {
-    "url": "https://github.com/your-org/dpd-local-sdk/issues"
+    "url": "https://github.com/TheJazzDev/dpd-local-sdk.git/issues"
   },
-  "homepage": "https://github.com/your-org/dpd-local-sdk#readme",
+  "homepage": "https://github.com/TheJazzDev/dpd-local-sdk.git#readme",
   "peerDependencies": {},
   "devDependencies": {
     "@types/node": "^20.0.0",

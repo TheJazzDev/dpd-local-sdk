@@ -4,7 +4,7 @@
  * TypeScript SDK for integrating DPD Local shipping services
  * Database-agnostic and framework-independent
  *
- * @package @your-org/dpd-local-sdk
+ * @package @jazzdev/dpd-local-sdk
  * @version 1.0.0
  * @author Your Name
  * @license MIT
@@ -14,7 +14,7 @@
 // Types
 // ============================================================================
 
-export * from "./types";
+export * from './types';
 
 // ============================================================================
 // Configuration
@@ -35,7 +35,7 @@ export {
   isValidServiceCode,
   getServiceName,
   getServiceDescription,
-} from "./config";
+} from './config';
 
 // ============================================================================
 // Core Libraries
@@ -49,7 +49,7 @@ export {
   getTokenExpiry,
   authenticatedRequest,
   testConnection,
-} from "./lib/auth";
+} from './lib/auth';
 
 export {
   createShipment,
@@ -59,7 +59,7 @@ export {
   calculateParcels,
   validateServiceCode,
   generateConsignmentRef,
-} from "./lib/shipment";
+} from './lib/shipment';
 
 export {
   createCompleteShipment,
@@ -74,7 +74,7 @@ export {
   regenerateLabel,
   testDPDConnection,
   getAuthStatus,
-} from "./lib/dpd-service";
+} from './lib/dpd-service';
 
 // ============================================================================
 // Utilities
@@ -88,7 +88,7 @@ export {
   generateEncryptionKey,
   hash,
   verifyHash,
-} from "./utils/encryption";
+} from './utils/encryption';
 
 export {
   configureLogger,
@@ -96,10 +96,10 @@ export {
   logOperation,
   loggedOperation,
   startTimer,
-} from "./utils/logger";
+} from './utils/logger';
 
 // ============================================================================
 // Default Export
 // ============================================================================
 
-export { default as DPDService } from "./lib/dpd-service";
+export { default as DPDService } from './lib/dpd-service';

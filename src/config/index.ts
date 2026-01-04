@@ -4,7 +4,7 @@
  * Configuration factory for DPD integration
  * Allows customization for different businesses
  *
- * @package @your-org/dpd-local-sdk
+ * @package @jazzdev/dpd-local-sdk
  */
 
 import type {
@@ -12,19 +12,19 @@ import type {
   DPDServiceCode,
   BusinessConfig,
   DPDCredentials,
-} from "../types";
+} from '../types';
 
 // ============================================================================
 // DPD API Configuration
 // ============================================================================
 
 export const DPD_API = {
-  BASE_URL: "https://api.dpdlocal.co.uk",
+  BASE_URL: 'https://api.dpdlocal.co.uk',
   ENDPOINTS: {
-    AUTH: "/user/?action=login",
-    SHIPMENT: "/shipping/shipment",
-    LABEL: "/shipping/shipment", // Will append /{shipmentId}/label/
-    TRACKING: "/shipping/network/",
+    AUTH: '/user/?action=login',
+    SHIPMENT: '/shipping/shipment',
+    LABEL: '/shipping/shipment', // Will append /{shipmentId}/label/
+    TRACKING: '/shipping/network/',
     // Note: Address validation uses postcodes.io API instead of DPD
   },
   TIMEOUT: 30000, // 30 seconds
@@ -37,13 +37,13 @@ export const DPD_API = {
 // ============================================================================
 
 export const SERVICE_NAMES: Record<DPDServiceCode, string> = {
-  "12": "Next Day Delivery",
-  "07": "By 12 PM Delivery",
+  '12': 'Next Day Delivery',
+  '07': 'By 12 PM Delivery',
 };
 
 export const SERVICE_DESCRIPTIONS: Record<DPDServiceCode, string> = {
-  "12": "Standard next day delivery - most affordable option",
-  "07": "Premium delivery by 12 PM the next day",
+  '12': 'Standard next day delivery - most affordable option',
+  '07': 'Premium delivery by 12 PM the next day',
 };
 
 // ============================================================================
@@ -63,12 +63,12 @@ export interface CreateDPDConfigOptions {
     flatDeliveryFee?: number;
     minimumOrderValue?: number;
     services?: {
-      "12"?: {
+      '12'?: {
         basePrice: number;
         perKgPrice: number;
         customerPrice: number;
       };
-      "07"?: {
+      '07'?: {
         basePrice: number;
         perKgPrice: number;
         customerPrice: number;
@@ -82,25 +82,25 @@ export interface CreateDPDConfigOptions {
   };
 
   labels?: {
-    format?: "thermal" | "a4";
+    format?: 'thermal' | 'a4';
     printer?: {
       model: string;
       dpi: number;
       speed: number;
-      connection: "USB" | "Network";
+      connection: 'USB' | 'Network';
     };
   };
 
   notifications?: {
     email?: {
       enabled: boolean;
-      provider: "resend" | "sendgrid" | "ses";
+      provider: 'resend' | 'sendgrid' | 'ses';
       fromEmail: string;
       adminEmail: string;
     };
     sms?: {
       enabled: boolean;
-      provider: "dpd";
+      provider: 'dpd';
     };
   };
 
@@ -149,13 +149,13 @@ export function createDPDConfig(
     flatDeliveryFee: 6.0, // £6.00
     minimumOrderValue: 25.0, // £25
     services: {
-      "12": {
+      '12': {
         // Next Day
         basePrice: 6.0,
         perKgPrice: 0.3,
         customerPrice: 6.0,
       },
-      "07": {
+      '07': {
         // By 12
         basePrice: 7.0,
         perKgPrice: 0.42,
@@ -166,18 +166,18 @@ export function createDPDConfig(
 
   // Default services
   const defaultServices = {
-    enabled: ["12", "07"] as DPDServiceCode[],
-    default: "12" as DPDServiceCode,
+    enabled: ['12', '07'] as DPDServiceCode[],
+    default: '12' as DPDServiceCode,
   };
 
   // Default labels
   const defaultLabels = {
-    format: "thermal" as const,
+    format: 'thermal' as const,
     printer: {
-      model: "TSC-DA210",
+      model: 'TSC-DA210',
       dpi: 203,
       speed: 6,
-      connection: "USB" as const,
+      connection: 'USB' as const,
     },
   };
 
@@ -185,13 +185,13 @@ export function createDPDConfig(
   const defaultNotifications = {
     email: {
       enabled: true,
-      provider: "resend" as const,
-      fromEmail: options.notifications?.email?.fromEmail || "",
-      adminEmail: options.notifications?.email?.adminEmail || "",
+      provider: 'resend' as const,
+      fromEmail: options.notifications?.email?.fromEmail || '',
+      adminEmail: options.notifications?.email?.adminEmail || '',
     },
     sms: {
       enabled: true,
-      provider: "dpd" as const,
+      provider: 'dpd' as const,
     },
   };
 
@@ -218,7 +218,7 @@ export function createDPDConfig(
       ...defaultNotifications,
       ...options.notifications,
     },
-    testMode: options.testMode ?? process.env.NODE_ENV !== "production",
+    testMode: options.testMode ?? process.env.NODE_ENV !== 'production',
   };
 }
 
@@ -231,7 +231,7 @@ export function createDPDConfig(
  */
 export const calculateDeliveryFee = (
   subtotal: number,
-  service: DPDServiceCode = "12",
+  service: DPDServiceCode = '12',
   config: DPDModuleConfig
 ): number => {
   // Free delivery over threshold
@@ -300,7 +300,7 @@ export const getNextCollectionDate = (): string => {
   }
 
   // Format as YYYY-MM-DD
-  return collectionDate.toISOString().split("T")[0];
+  return collectionDate.toISOString().split('T')[0];
 };
 
 /**
@@ -321,7 +321,7 @@ export const getEstimatedDeliveryDate = (
     delivery.setDate(delivery.getDate() + 1);
   }
 
-  return delivery.toISOString().split("T")[0];
+  return delivery.toISOString().split('T')[0];
 };
 
 /**
@@ -354,5 +354,5 @@ export const getServiceName = (code: DPDServiceCode): string => {
  * Get service description
  */
 export const getServiceDescription = (code: DPDServiceCode): string => {
-  return SERVICE_DESCRIPTIONS[code] || "";
+  return SERVICE_DESCRIPTIONS[code] || '';
 };

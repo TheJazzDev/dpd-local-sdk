@@ -2,13 +2,14 @@
 
 > TypeScript SDK for integrating DPD Local shipping services into your application. Database-agnostic, framework-independent, and production-ready.
 
-[![npm version](https://badge.fury.io/js/%40your-org%2Fdpd-local-sdk.svg)](https://www.npmjs.com/package/@your-org/dpd-local-sdk)
+[![npm version](https://badge.fury.io/js/%40your-org%2Fdpd-local-sdk.svg)](https://www.npmjs.com/package/@jazzdev/dpd-local-sdk)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3+-blue.svg)](https://www.typescriptlang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## Features
 
 ✅ **Complete DPD Integration**
+
 - Create shipments and generate labels
 - Address validation (UK postcodes)
 - Real-time tracking
@@ -16,11 +17,13 @@
 - Service selection (Next Day, By 12 PM)
 
 ✅ **Database-Agnostic**
+
 - Works with any database (Firestore, MongoDB, PostgreSQL, etc.)
 - Adapter pattern for easy integration
 - TypeScript-first design
 
 ✅ **Production-Ready**
+
 - Battle-tested in production
 - Comprehensive error handling
 - Automatic token management
@@ -28,6 +31,7 @@
 - Detailed logging
 
 ✅ **Developer-Friendly**
+
 - Full TypeScript support
 - Comprehensive JSDoc comments
 - Example implementations included
@@ -36,11 +40,11 @@
 ## Installation
 
 ```bash
-npm install @your-org/dpd-local-sdk
+npm install @jazzdev/dpd-local-sdk
 # or
-yarn add @your-org/dpd-local-sdk
+yarn add @jazzdev/dpd-local-sdk
 # or
-pnpm add @your-org/dpd-local-sdk
+pnpm add @jazzdev/dpd-local-sdk
 ```
 
 ## Quick Start
@@ -48,7 +52,7 @@ pnpm add @your-org/dpd-local-sdk
 ### 1. Create Configuration
 
 ```typescript
-import { createDPDConfig } from "@your-org/dpd-local-sdk";
+import { createDPDConfig } from '@jazzdev/dpd-local-sdk';
 
 const config = createDPDConfig({
   credentials: {
@@ -57,20 +61,20 @@ const config = createDPDConfig({
     password: process.env.DPD_PASSWORD!,
   },
   business: {
-    name: "Your Business Name",
+    name: 'Your Business Name',
     collectionAddress: {
-      organisation: "Your Company Ltd",
-      property: "Unit 1",
-      street: "123 Main Street",
-      locality: "",
-      town: "London",
-      county: "Greater London",
-      postcode: "SW1A 1AA",
-      countryCode: "GB",
+      organisation: 'Your Company Ltd',
+      property: 'Unit 1',
+      street: '123 Main Street',
+      locality: '',
+      town: 'London',
+      county: 'Greater London',
+      postcode: 'SW1A 1AA',
+      countryCode: 'GB',
     },
-    contactName: "Your Name",
-    contactPhone: "+441234567890",
-    contactEmail: "shipping@yourcompany.com",
+    contactName: 'Your Name',
+    contactPhone: '+441234567890',
+    contactEmail: 'shipping@yourcompany.com',
   },
 });
 ```
@@ -82,7 +86,7 @@ The SDK requires two adapters to work with your database and storage:
 #### Database Adapter
 
 ```typescript
-import { DatabaseAdapter } from "@your-org/dpd-local-sdk";
+import { DatabaseAdapter } from '@jazzdev/dpd-local-sdk';
 
 const myDatabaseAdapter: DatabaseAdapter = {
   async getOrder(orderId: string) {
@@ -137,7 +141,7 @@ const myDatabaseAdapter: DatabaseAdapter = {
 #### Storage Adapter
 
 ```typescript
-import { StorageAdapter } from "@your-org/dpd-local-sdk";
+import { StorageAdapter } from '@jazzdev/dpd-local-sdk';
 
 const myStorageAdapter: StorageAdapter = {
   async uploadLabel(labelData: string, fileName: string) {
@@ -161,34 +165,34 @@ const myStorageAdapter: StorageAdapter = {
 ### 3. Create a Shipment
 
 ```typescript
-import { createCompleteShipment } from "@your-org/dpd-local-sdk";
+import { createCompleteShipment } from '@jazzdev/dpd-local-sdk';
 
 const result = await createCompleteShipment(
-  "ORDER123", // Your order ID
+  'ORDER123', // Your order ID
   {
-    orderRef: "ORDER123",
-    service: "12", // Next Day Delivery
+    orderRef: 'ORDER123',
+    service: '12', // Next Day Delivery
     deliveryAddress: {
-      id: "addr_123",
-      userId: "user_123",
+      id: 'addr_123',
+      userId: 'user_123',
       isDefault: true,
-      property: "10",
-      street: "Downing Street",
-      town: "London",
-      postcode: "SW1A 2AA",
-      countryCode: "GB",
-      contactName: "John Doe",
-      contactPhone: "+441234567890",
+      property: '10',
+      street: 'Downing Street',
+      town: 'London',
+      postcode: 'SW1A 2AA',
+      countryCode: 'GB',
+      contactName: 'John Doe',
+      contactPhone: '+441234567890',
       validated: true,
       createdAt: new Date(),
       updatedAt: new Date(),
     },
     totalWeight: 2.5, // kg
     numberOfParcels: 1,
-    customerEmail: "customer@example.com",
-    customerPhone: "+441234567890",
-    deliveryInstructions: "Leave with neighbor if not home",
-    collectionDate: "2024-01-15",
+    customerEmail: 'customer@example.com',
+    customerPhone: '+441234567890',
+    deliveryInstructions: 'Leave with neighbor if not home',
+    collectionDate: '2024-01-15',
   },
   config,
   myDatabaseAdapter,
@@ -196,11 +200,11 @@ const result = await createCompleteShipment(
 );
 
 if (result.success) {
-  console.log("Shipment created!");
-  console.log("Tracking URL:", result.trackingUrl);
-  console.log("Label URL:", result.labelUrl);
+  console.log('Shipment created!');
+  console.log('Tracking URL:', result.trackingUrl);
+  console.log('Label URL:', result.labelUrl);
 } else {
-  console.error("Failed:", result.error);
+  console.error('Failed:', result.error);
 }
 ```
 
@@ -213,6 +217,7 @@ if (result.success) {
 Creates a complete DPD module configuration.
 
 **Parameters:**
+
 - `options.credentials` - DPD API credentials
 - `options.business` - Your business information
 - `options.pricing` (optional) - Custom pricing configuration
@@ -230,6 +235,7 @@ Creates a complete DPD module configuration.
 Create a complete shipment including label generation and database update.
 
 **Parameters:**
+
 - `orderId` - Your internal order ID
 - `params` - Shipment parameters (address, weight, service, etc.)
 - `config` - DPD configuration
@@ -243,6 +249,7 @@ Create a complete shipment including label generation and database update.
 Validate a UK delivery address using postcodes.io API.
 
 **Parameters:**
+
 - `params.postcode` - UK postcode
 - `params.town` - Town/city name
 - `credentials` - DPD credentials
@@ -254,6 +261,7 @@ Validate a UK delivery address using postcodes.io API.
 Test connection to DPD API.
 
 **Parameters:**
+
 - `credentials` - DPD credentials
 
 **Returns:** `Promise<{ success: boolean; message: string }>`
@@ -286,8 +294,8 @@ Generate DPD tracking URL.
 
 ```typescript
 // app/api/shipping/create/route.ts
-import { createCompleteShipment } from "@your-org/dpd-local-sdk";
-import { NextRequest, NextResponse } from "next/server";
+import { createCompleteShipment } from '@jazzdev/dpd-local-sdk';
+import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(req: NextRequest) {
   const { orderId, deliveryAddress, weight } = await req.json();
@@ -296,12 +304,12 @@ export async function POST(req: NextRequest) {
     orderId,
     {
       orderRef: orderId,
-      service: "12",
+      service: '12',
       deliveryAddress,
       totalWeight: weight,
       numberOfParcels: 1,
       customerEmail: deliveryAddress.contactEmail,
-      collectionDate: new Date().toISOString().split("T")[0],
+      collectionDate: new Date().toISOString().split('T')[0],
     },
     dpdConfig,
     databaseAdapter,
@@ -315,24 +323,24 @@ export async function POST(req: NextRequest) {
 ### Express.js
 
 ```typescript
-import express from "express";
-import { createCompleteShipment } from "@your-org/dpd-local-sdk";
+import express from 'express';
+import { createCompleteShipment } from '@jazzdev/dpd-local-sdk';
 
 const app = express();
 
-app.post("/api/shipping/create", async (req, res) => {
+app.post('/api/shipping/create', async (req, res) => {
   const { orderId, deliveryAddress, weight } = req.body;
 
   const result = await createCompleteShipment(
     orderId,
     {
       orderRef: orderId,
-      service: "12",
+      service: '12',
       deliveryAddress,
       totalWeight: weight,
       numberOfParcels: 1,
       customerEmail: deliveryAddress.contactEmail,
-      collectionDate: new Date().toISOString().split("T")[0],
+      collectionDate: new Date().toISOString().split('T')[0],
     },
     dpdConfig,
     databaseAdapter,
@@ -361,10 +369,10 @@ NODE_ENV=production
 ### Generating Encryption Key
 
 ```typescript
-import { generateEncryptionKey } from "@your-org/dpd-local-sdk";
+import { generateEncryptionKey } from '@jazzdev/dpd-local-sdk';
 
 const key = generateEncryptionKey();
-console.log("DPD_ENCRYPTION_KEY=" + key);
+console.log('DPD_ENCRYPTION_KEY=' + key);
 ```
 
 ## Adapter Examples
@@ -416,7 +424,7 @@ import type {
   ShippingData,
   DatabaseAdapter,
   StorageAdapter,
-} from "@your-org/dpd-local-sdk";
+} from '@jazzdev/dpd-local-sdk';
 ```
 
 ## Contributing
@@ -425,18 +433,13 @@ Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for de
 
 ## License
 
-MIT © [Your Name](https://github.com/your-org)
+MIT © [Taiow Babarinde](https://github.com/TheJazzDev)
 
 ## Support
 
-- 📧 Email: support@your-org.com
-- 🐛 Issues: [GitHub Issues](https://github.com/your-org/dpd-local-sdk/issues)
-- 📖 Documentation: [Full Docs](https://docs.your-org.com/dpd-local-sdk)
+- 📧 Email: babsman4all@gmail.com
+- 🐛 Issues: [GitHub Issues](https://github.com/TheJazzDev/dpd-local-sdk.git/issues)
 
 ## Changelog
 
 See [CHANGELOG.md](CHANGELOG.md) for release history.
-
----
-
-**Made with ❤️ for the developer community**

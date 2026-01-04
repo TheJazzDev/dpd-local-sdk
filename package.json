@@ -1,0 +1,60 @@
+{
+  "name": "@your-org/dpd-local-sdk",
+  "version": "1.0.0",
+  "description": "TypeScript SDK for DPD Local shipping API integration - database-agnostic and framework-independent",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts --clean",
+    "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "dpd",
+    "dpd-local",
+    "shipping",
+    "logistics",
+    "delivery",
+    "courier",
+    "parcel",
+    "tracking",
+    "label-printing",
+    "typescript",
+    "sdk",
+    "api-client"
+  ],
+  "author": "Your Name <your.email@example.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-org/dpd-local-sdk.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-org/dpd-local-sdk/issues"
+  },
+  "homepage": "https://github.com/your-org/dpd-local-sdk#readme",
+  "peerDependencies": {},
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.3.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

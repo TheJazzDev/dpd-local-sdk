@@ -1,0 +1,29 @@
+# Source files (only ship dist/)
+src/
+examples/
+docs/
+
+# Development files
+.gitignore
+.npmignore
+tsconfig.json
+*.ts
+!*.d.ts
+
+# IDE
+.vscode/
+.idea/
+
+# Testing
+coverage/
+.nyc_output/
+**/*.test.ts
+**/*.spec.ts
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+
+# Misc
+*.log
+.DS_Store

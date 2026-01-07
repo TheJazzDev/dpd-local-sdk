@@ -1,6 +1,6 @@
 {
   "name": "@jazzdev/dpd-local-sdk",
-  "version": "1.0.1",
+  "version": "1.0.6",
   "description": "TypeScript SDK for DPD Local shipping API integration - database-agnostic and framework-independent",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",

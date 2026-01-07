@@ -4,8 +4,8 @@
  * Handles shipment creation, label generation, and tracking
  */
 
-import { authenticatedRequest } from "./auth";
-import { DPD_API, getTrackingUrl, getNextCollectionDate } from "../config";
+import { authenticatedRequest } from './auth';
+import { DPD_API, getTrackingUrl, getNextCollectionDate } from '../config';
 import type {
   DPDCredentials,
   CreateShipmentParams,
@@ -22,7 +22,8 @@ import type {
   DPDShipmentResponse,
   DPDServiceCode,
   ShipmentStatusUpdate,
-} from "../types";
+} from '../types';
+import { getAcceptHeader } from '../utils/getAcceptHeader';
 
 // ============================================================================
 // Shipment Creation
@@ -38,7 +39,7 @@ import type {
 export async function createShipment(
   credentials: DPDCredentials,
   params: CreateShipmentParams,
-  businessConfig: any,
+  businessConfig: any
 ): Promise<CreateShipmentResult> {
   try {
     const {
@@ -62,7 +63,7 @@ export async function createShipment(
       { length: numberOfParcels },
       () => ({
         weight: parseFloat(weightPerParcel.toFixed(2)),
-      }),
+      })
     );
 
     // Build consignment
@@ -80,12 +81,12 @@ export async function createShipment(
       },
       deliveryDetails: {
         address: {
-          organisation: deliveryAddress.organisation || "",
+          organisation: deliveryAddress.organisation || '',
           property: deliveryAddress.property,
           street: deliveryAddress.street,
-          locality: deliveryAddress.locality || "",
+          locality: deliveryAddress.locality || '',
           town: deliveryAddress.town,
-          county: deliveryAddress.county || "",
+          county: deliveryAddress.county || '',
           postcode: deliveryAddress.postcode,
           countryCode: deliveryAddress.countryCode,
         },
@@ -123,10 +124,10 @@ export async function createShipment(
     const response = await authenticatedRequest<DPDShipmentResponse>(
       credentials,
       {
-        method: "POST",
+        method: 'POST',
         endpoint: DPD_API.ENDPOINTS.SHIPMENT,
         body: shipmentRequest,
-      },
+      }
     );
 
     const responseData = response.data as any;
@@ -148,8 +149,14 @@ export async function createShipment(
     if (!consignmentNumber || !shipmentId || !parcelNumber) {
       return {
         success: false,
-        error: `Missing required data: ${!shipmentId ? "shipmentId" : !consignmentNumber ? "consignmentNumber" : "parcelNumber"}`,
-        errorCode: "INCOMPLETE_RESPONSE",
+        error: `Missing required data: ${
+          !shipmentId
+            ? 'shipmentId'
+            : !consignmentNumber
+            ? 'consignmentNumber'
+            : 'parcelNumber'
+        }`,
+        errorCode: 'INCOMPLETE_RESPONSE',
       };
     }
 
@@ -166,8 +173,8 @@ export async function createShipment(
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Unknown error",
-      errorCode: "SHIPMENT_CREATION_FAILED",
+      error: error instanceof Error ? error.message : 'Unknown error',
+      errorCode: 'SHIPMENT_CREATION_FAILED',
     };
   }
 }
@@ -185,47 +192,63 @@ export async function createShipment(
  */
 export async function generateLabel(
   credentials: DPDCredentials,
-  params: GenerateLabelParams,
+  params: GenerateLabelParams
 ): Promise<GenerateLabelResult> {
   try {
-    const { shipmentId, format } = params;
-
-    // Determine content type based on format
-    const contentType =
-      format === "thermal" ? "text/vnd.citizen-clp" : "text/html";
+    const { shipmentId, labelFormat } = params;
 
     // Build endpoint with shipmentId: /shipping/shipment/{shipmentId}/label/
     const endpoint = `${DPD_API.ENDPOINTS.LABEL}/${shipmentId}/label/`;
 
     // Make API request - this is a GET request, not POST
     const response = await authenticatedRequest<string>(credentials, {
-      method: "GET",
+      method: 'GET',
       endpoint: endpoint,
       headers: {
-        Accept: contentType,
+        Accept: getAcceptHeader(labelFormat),
       },
     });
+
+    console.log({
+      endpoint,
+      labelFormat,
+      header: getAcceptHeader(labelFormat),
+      response,
+    });
+
+    // Check if response is an error object from DPD
+    if (typeof response === 'object' && (response as any).error) {
+      const errorObj = (response as any).error;
+      const errorMessage =
+        errorObj.errorMessage ||
+        errorObj.name ||
+        JSON.stringify(errorObj);
+      return {
+        success: false,
+        error: `DPD API error: ${errorMessage}`,
+      };
+    }
 
     // Response should be the label data directly (not wrapped in {data: ...})
     if (
       !response ||
-      (typeof response === "object" && !(response as any).data)
+      (typeof response === 'object' && !(response as any).data)
     ) {
       return {
         success: false,
-        error: "No label data received from DPD",
+        error: 'No label data received from DPD',
       };
     }
 
     return {
       success: true,
       labelData:
-        typeof response === "string" ? response : (response as any).data,
+        typeof response === 'string' ? response : (response as any).data,
     };
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Unknown error",
+      error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
 }
@@ -246,13 +269,13 @@ export async function generateLabel(
  */
 export async function validateAddress(
   _credentials: DPDCredentials,
-  params: ValidateAddressParams,
+  params: ValidateAddressParams
 ): Promise<ValidateAddressResult> {
   try {
     const { postcode, town } = params;
 
     // Clean postcode (remove spaces, uppercase)
-    const cleanPostcode = postcode.replace(/\s/g, "").toUpperCase();
+    const cleanPostcode = postcode.replace(/\s/g, '').toUpperCase();
 
     // Validate postcode format (UK format: AA9A 9AA, A9A 9AA, A9 9AA, A99 9AA, AA9 9AA, AA99 9AA)
     const postcodeRegex = /^[A-Z]{1,2}\d{1,2}[A-Z]?\d[A-Z]{2}$/;
@@ -260,13 +283,13 @@ export async function validateAddress(
       return {
         valid: false,
         serviceable: false,
-        message: "Invalid UK postcode format",
+        message: 'Invalid UK postcode format',
       };
     }
 
     // Use free UK Postcodes API to validate postcode
     const response = await fetch(
-      `https://api.postcodes.io/postcodes/${encodeURIComponent(cleanPostcode)}`,
+      `https://api.postcodes.io/postcodes/${encodeURIComponent(cleanPostcode)}`
     );
 
     if (!response.ok) {
@@ -274,7 +297,7 @@ export async function validateAddress(
         return {
           valid: false,
           serviceable: false,
-          message: "Postcode not found in UK database",
+          message: 'Postcode not found in UK database',
         };
       }
       throw new Error(`Postcode lookup failed: ${response.statusText}`);
@@ -286,16 +309,18 @@ export async function validateAddress(
       return {
         valid: false,
         serviceable: false,
-        message: "Invalid postcode",
+        message: 'Invalid postcode',
       };
     }
 
     // Check if postcode is in England, Wales, or Scotland (DPD coverage)
     const country = data.result.country as string;
-    const serviceable = ["England", "Wales", "Scotland"].includes(country);
+    const serviceable = ['England', 'Wales', 'Scotland'].includes(country);
 
     // Optional: Check if town matches (case-insensitive)
-    const returnedTown = (data.result.admin_district || data.result.parish || "") as string;
+    const returnedTown = (data.result.admin_district ||
+      data.result.parish ||
+      '') as string;
     const townMatch = town
       ? returnedTown.toLowerCase().includes(town.toLowerCase()) ||
         town.toLowerCase().includes(returnedTown.toLowerCase())
@@ -313,7 +338,7 @@ export async function validateAddress(
       valid: true,
       serviceable,
       message: serviceable
-        ? "Address is valid and serviceable by DPD"
+        ? 'Address is valid and serviceable by DPD'
         : `Address is valid but may not be serviceable by DPD (${country})`,
     };
   } catch (error) {
@@ -321,7 +346,7 @@ export async function validateAddress(
       valid: false,
       serviceable: false,
       message:
-        error instanceof Error ? error.message : "Address validation failed",
+        error instanceof Error ? error.message : 'Address validation failed',
     };
   }
 }
@@ -363,7 +388,7 @@ export interface DPDTrackingResponse {
  */
 export async function trackShipment(
   credentials: DPDCredentials,
-  params: TrackShipmentParams,
+  params: TrackShipmentParams
 ): Promise<TrackShipmentResult> {
   try {
     const { consignmentNumber } = params;
@@ -371,19 +396,19 @@ export async function trackShipment(
     const response = await authenticatedRequest<DPDTrackingResponse>(
       credentials,
       {
-        method: "GET",
+        method: 'GET',
         endpoint: `${DPD_API.ENDPOINTS.TRACKING}${consignmentNumber}`,
-      },
+      }
     );
 
     if (!response.data) {
       return {
         success: false,
-        error: "No tracking data available",
+        error: 'No tracking data available',
       };
     }
 
-    const status = mapDPDStatus(response.data.status ?? "UNKNOWN");
+    const status = mapDPDStatus(response.data.status ?? 'UNKNOWN');
 
     // Convert DPD tracking events to our internal format
     const statusHistory = response.data.history
@@ -393,7 +418,7 @@ export async function trackShipment(
             timestamp: new Date(event.timestamp).toISOString(),
             message: event.message,
             location: event.location,
-          }),
+          })
         )
       : undefined;
 
@@ -407,7 +432,7 @@ export async function trackShipment(
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Tracking failed",
+      error: error instanceof Error ? error.message : 'Tracking failed',
     };
   }
 }
@@ -421,17 +446,17 @@ export async function trackShipment(
  */
 function mapDPDStatus(dpdStatus: string): any {
   const statusMap: Record<string, string> = {
-    CREATED: "created",
-    "LABEL GENERATED": "label_generated",
-    COLLECTED: "collected",
-    "IN TRANSIT": "in_transit",
-    "OUT FOR DELIVERY": "out_for_delivery",
-    DELIVERED: "delivered",
-    FAILED: "failed",
-    CANCELLED: "cancelled",
+    CREATED: 'created',
+    'LABEL GENERATED': 'label_generated',
+    COLLECTED: 'collected',
+    'IN TRANSIT': 'in_transit',
+    'OUT FOR DELIVERY': 'out_for_delivery',
+    DELIVERED: 'delivered',
+    FAILED: 'failed',
+    CANCELLED: 'cancelled',
   };
 
-  return statusMap[dpdStatus.toUpperCase()] || "created";
+  return statusMap[dpdStatus.toUpperCase()] || 'created';
 }
 
 /**
@@ -452,7 +477,7 @@ export function calculateParcels(totalWeight: number): number {
  * Validate service code
  */
 export function validateServiceCode(code: string): code is DPDServiceCode {
-  return code === "12" || code === "07";
+  return code === '12' || code === '07';
 }
 
 /**

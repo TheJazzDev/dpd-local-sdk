@@ -2,6 +2,11 @@
  * Basic Usage Example
  *
  * Complete workflow for creating a DPD shipment
+ *
+ * SETUP REQUIRED:
+ * 1. Install dependencies: npm install firebase-admin
+ * 2. Set up your .env file with DPD and Firebase credentials
+ * 3. Uncomment the Firebase initialization code below
  */
 
 import {
@@ -12,9 +17,9 @@ import {
 } from '@jazzdev/dpd-local-sdk';
 import type { DatabaseAdapter, StorageAdapter } from '@jazzdev/dpd-local-sdk';
 
-// Import your adapters
-import { FirestoreAdminAdapter } from './firestore-adapter';
-import { FirebaseStorageAdapter } from './firebase-storage-adapter';
+// Uncomment to use Firebase adapters:
+// import { FirestoreAdminAdapter } from './firestore-adapter';
+// import { FirebaseStorageAdapter } from './firebase-storage-adapter';
 
 async function main() {
   // 1. Create DPD Configuration
@@ -43,11 +48,74 @@ async function main() {
   });
 
   // 2. Initialize Adapters
-  // (Replace with your actual database and storage initialization)
-  const databaseAdapter: DatabaseAdapter = new FirestoreAdminAdapter();
-  /* your Firestore instance */
-  const storageAdapter: StorageAdapter = new FirebaseStorageAdapter();
-  /* your Firebase Storage instance */
+  // You need to implement these adapters for your database/storage
+  // See firestore-adapter.ts and firebase-storage-adapter.ts for examples
+
+  // Option A: Use Firebase (uncomment after installing firebase-admin)
+  /*
+  import { initializeApp, cert } from 'firebase-admin/app';
+  import { getFirestore } from 'firebase-admin/firestore';
+  import { getStorage } from 'firebase-admin/storage';
+  import { FirestoreAdminAdapter } from './firestore-adapter';
+  import { FirebaseStorageAdapter } from './firebase-storage-adapter';
+
+  const app = initializeApp({
+    credential: cert({
+      projectId: process.env.FIREBASE_PROJECT_ID,
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+    }),
+    storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
+  });
+
+  const databaseAdapter = new FirestoreAdminAdapter(getFirestore(app));
+  const storageAdapter = new FirebaseStorageAdapter(getStorage(app));
+  */
+
+  // Option B: Create mock adapters for testing
+  const databaseAdapter: DatabaseAdapter = {
+    async getOrder(orderId: string) {
+      return { id: orderId, status: 'pending' };
+    },
+    async updateOrder(orderId: string, data: any) {
+      console.log('Updating order:', orderId, data);
+    },
+    async getSavedAddresses(userId: string) {
+      return [];
+    },
+    async getSavedAddress(addressId: string) {
+      return null;
+    },
+    async createSavedAddress(address: any) {
+      return 'mock-address-id';
+    },
+    async updateSavedAddress(addressId: string, data: any) {
+      console.log('Updating address:', addressId);
+    },
+    async deleteSavedAddress(addressId: string) {
+      console.log('Deleting address:', addressId);
+    },
+    async createDPDLog(log: any) {
+      console.log('DPD Log:', log.operation, log.success ? '✅' : '❌');
+      return 'mock-log-id';
+    },
+    async getDPDLogs(filters: any) {
+      return [];
+    },
+  };
+
+  const storageAdapter: StorageAdapter = {
+    async uploadLabel(labelData: string, fileName: string) {
+      console.log(`Mock upload: ${fileName} (${labelData.length} bytes)`);
+      return `https://mock-storage.example.com/${fileName}`;
+    },
+    async getLabel(fileName: string) {
+      return `https://mock-storage.example.com/${fileName}`;
+    },
+    async deleteLabel(fileName: string) {
+      console.log(`Mock delete: ${fileName}`);
+    },
+  };
 
   // 3. Test Connection
   console.log('Testing DPD connection...');

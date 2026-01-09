@@ -209,31 +209,9 @@ export async function generateLabel(
       },
     });
 
-    console.log({
-      endpoint,
-      labelFormat,
-      header: getAcceptHeader(labelFormat),
-      response,
-    });
-
-    // Check if response is an error object from DPD
-    if (typeof response === 'object' && (response as any).error) {
-      const errorObj = (response as any).error;
-      const errorMessage =
-        errorObj.errorMessage ||
-        errorObj.name ||
-        JSON.stringify(errorObj);
-      return {
-        success: false,
-        error: `DPD API error: ${errorMessage}`,
-      };
-    }
-
-    // Response should be the label data directly (not wrapped in {data: ...})
-    if (
-      !response ||
-      (typeof response === 'object' && !(response as any).data)
-    ) {
+    // Response should be the label data directly as a string
+    // The authenticatedRequest already handles error checking for label requests
+    if (!response || typeof response !== 'string') {
       return {
         success: false,
         error: 'No label data received from DPD',
@@ -242,8 +220,7 @@ export async function generateLabel(
 
     return {
       success: true,
-      labelData:
-        typeof response === 'string' ? response : (response as any).data,
+      labelData: response,
     };
   } catch (error) {
     return {

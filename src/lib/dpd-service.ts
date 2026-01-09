@@ -42,25 +42,6 @@ import type {
  * @param dbAdapter - Database adapter (required)
  * @param storageAdapter - Storage adapter (required)
  * @returns Shipment result with label URL
- *
- * @example
- * ```typescript
- * const result = await createCompleteShipment(
- *   "ORDER123",
- *   {
- *     orderRef: "ORDER123",
- *     service: "12",
- *     deliveryAddress: savedAddress,
- *     totalWeight: 2.5,
- *     numberOfParcels: 1,
- *     customerEmail: "customer@example.com",
- *     collectionDate: "2024-01-15",
- *   },
- *   config,
- *   myDatabaseAdapter,
- *   myStorageAdapter
- * );
- * ```
  */
 export async function createCompleteShipment(
   orderId: string,
@@ -89,8 +70,7 @@ export async function createCompleteShipment(
     // 2. Generate and upload label (requires shipmentId from DPD API)
     const labelResult = await generateAndUploadLabel(
       shipmentResult.shipmentId,
-      shipmentResult.consignmentNumber,
-      'thermal',
+      config.labels.format,
       config.credentials,
       storageAdapter
     );
@@ -191,15 +171,14 @@ export async function createCompleteShipment(
  *
  * @param shipmentId - DPD shipment ID
  * @param consignmentNumber - Consignment number
- * @param format - Label format (thermal or a4)
+ * @param labelFormat - Label format (thermal or a4)
  * @param credentials - DPD credentials
  * @param storageAdapter - Storage adapter (required)
  * @returns Label result with URL
  */
 export async function generateAndUploadLabel(
   shipmentId: string | number,
-  consignmentNumber: string,
-  format: 'thermal' | 'a4' = 'thermal',
+  labelFormat: 'zpl' | 'clp' | 'epl' | 'html',
   credentials: DPDCredentials,
   storageAdapter: StorageAdapter
 ): Promise<GenerateLabelResult> {
@@ -207,7 +186,7 @@ export async function generateAndUploadLabel(
     // 1. Generate label with DPD
     const labelResult = await generateLabel(credentials, {
       shipmentId,
-      format,
+      labelFormat,
     });
 
     if (!labelResult.success || !labelResult.labelData) {
@@ -216,8 +195,8 @@ export async function generateAndUploadLabel(
 
     // 2. Generate file name
     const timestamp = Date.now();
-    const extension = format === 'thermal' ? 'txt' : 'html';
-    const fileName = `${consignmentNumber}-${timestamp}.${extension}`;
+    const extension = labelFormat === 'html' ? 'html' : 'txt';
+    const fileName = `${shipmentId}-${timestamp}.${extension}`;
 
     // 3. Upload to storage
     const labelUrl = await storageAdapter.uploadLabel(
@@ -322,15 +301,13 @@ export async function getLabelUrl(
 
 export async function regenerateLabel(
   shipmentId: string | number,
-  consignmentNumber: string,
-  format: 'thermal' | 'a4' = 'thermal',
+  labelFormat: 'zpl' | 'clp' | 'epl' | 'html',
   credentials: DPDCredentials,
   storageAdapter: StorageAdapter
 ): Promise<GenerateLabelResult> {
   return await generateAndUploadLabel(
     shipmentId,
-    consignmentNumber,
-    format,
+    labelFormat,
     credentials,
     storageAdapter
   );

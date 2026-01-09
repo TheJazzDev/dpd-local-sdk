@@ -203,19 +203,72 @@ export async function authenticatedRequest<T = unknown>(
       // Check if we're expecting non-JSON response (e.g., label data)
       const acceptHeader = headers.Accept || headers.accept;
       const isLabelRequest =
+        acceptHeader === "text/vnd.zebra-zpl" ||
         acceptHeader === "text/vnd.citizen-clp" ||
         acceptHeader === "text/vnd.eltron-epl" ||
         acceptHeader === "text/html";
 
       let data: any = null;
 
-      // For label requests, return raw text without parsing
+      // For label requests, check if it's actually an error response in JSON format
       if (isLabelRequest) {
         if (!response.ok) {
           throw new Error(
             `Label request failed: ${response.status} ${response.statusText}`,
           );
         }
+
+        // DPD sometimes returns JSON error responses even for label requests
+        // Try to parse as JSON to check for errors
+        try {
+          const parsed = JSON.parse(raw);
+
+          // Check if this is an error response (has error property or data is null/empty)
+          if (parsed?.error || parsed?.data === null) {
+            // Extract error information
+            const errorObj = parsed?.error;
+            let errorMessage = 'Label generation failed';
+            let errorCode = 'UNKNOWN';
+
+            if (errorObj) {
+              // Handle error array format
+              if (Array.isArray(errorObj)) {
+                const firstError = errorObj[0];
+                errorMessage = firstError?.errorMessage || errorMessage;
+                errorCode = firstError?.errorCode || errorCode;
+              }
+              // Handle single error object format
+              else if (errorObj.errorMessage) {
+                errorMessage = errorObj.errorMessage;
+                errorCode = errorObj.errorCode || errorObj.name || errorCode;
+              } else if (errorObj.name) {
+                errorMessage = errorObj.name;
+                errorCode = errorObj.name;
+                // Check if there are detailed errors
+                if (Array.isArray(errorObj.errors) && errorObj.errors.length > 0) {
+                  const detailedError = errorObj.errors[0];
+                  errorMessage = detailedError.errorMessage || detailedError.message || errorMessage;
+                  errorCode = detailedError.errorCode || errorCode;
+                }
+              }
+            }
+
+            throw new Error(`DPD API Error ${errorCode}: ${errorMessage}`);
+          }
+          // If JSON parsed successfully but looks like valid data, return it
+          if (parsed?.data) {
+            return parsed.data as T;
+          }
+          // If JSON parsed but unexpected format, fall through to return raw
+        } catch (parseError) {
+          // If it's our thrown error, re-throw it
+          if (parseError instanceof Error && parseError.message.startsWith('DPD API Error')) {
+            throw parseError;
+          }
+          // If parsing fails, it's probably valid label data (ZPL/CLP/HTML)
+          // Continue and return raw text
+        }
+
         return raw as T;
       }
 

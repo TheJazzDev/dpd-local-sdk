@@ -201,12 +201,80 @@ const result = await createCompleteShipment(
 
 if (result.success) {
   console.log('Shipment created!');
+  console.log('Shipment ID:', result.shipmentId); // Save this for label regeneration
+  console.log('Consignment Number:', result.consignmentNumber); // 10-digit reference
+  console.log('Parcel Number:', result.parcelNumber); // 14-digit tracking number
   console.log('Tracking URL:', result.trackingUrl);
   console.log('Label URL:', result.labelUrl);
 } else {
   console.error('Failed:', result.error);
 }
 ```
+
+## Understanding DPD Identifiers
+
+When you create a shipment with DPD, you receive three different identifiers:
+
+1. **shipmentId** - DPD's internal shipment identifier (numeric)
+   - Required for label regeneration
+   - Save this in your database!
+
+2. **consignmentNumber** - 10-digit reference number (e.g., `6504286395`)
+   - Used for internal tracking
+
+3. **parcelNumber** - 14-digit tracking number (e.g., `15976504286395`)
+   - What customers use to track their delivery
+   - Used in the tracking URL
+
+```typescript
+// When creating a shipment, save ALL identifiers:
+const result = await createCompleteShipment(...);
+
+if (result.success) {
+  await saveToDatabase({
+    shipmentId: result.shipmentId,           // Save for label regeneration
+    consignmentNumber: result.consignmentNumber,
+    parcelNumber: result.parcelNumber,       // Give to customer for tracking
+    trackingUrl: result.trackingUrl,
+  });
+}
+```
+
+### Regenerating Labels
+
+If you need to regenerate a label (e.g., printer jam), use the `shipmentId`:
+
+```typescript
+import { generateLabel } from '@jazzdev/dpd-local-sdk';
+
+const result = await generateLabel(credentials, {
+  shipmentId: '12345678',  // Use the shipmentId, not consignment/parcel number
+  labelFormat: 'zpl'       // or 'clp', 'html'
+});
+```
+
+### Testing Label Generation
+
+A test script is included to verify label generation:
+
+```bash
+# Using npm script
+npm run test:label <shipmentId> [format]
+
+# Or directly with tsx
+npx tsx test-label-generation.ts <shipmentId> [format]
+
+# Examples
+npm run test:label 12345678
+npm run test:label 12345678 html
+npm run test:label 12345678 zpl
+```
+
+The script will:
+- Validate your DPD credentials
+- Generate the label in the specified format
+- Save it to a file (`label-<shipmentId>.<format>`)
+- Display a preview of the label content
 
 ## API Reference
 
@@ -379,11 +447,12 @@ console.log('DPD_ENCRYPTION_KEY=' + key);
 
 Complete adapter examples are available in the `examples/` directory:
 
-- `examples/firestore-adapter.ts` - Firestore implementation
-- `examples/mongodb-adapter.ts` - MongoDB implementation
-- `examples/postgresql-adapter.ts` - PostgreSQL implementation
-- `examples/firebase-storage-adapter.ts` - Firebase Storage implementation
-- `examples/s3-storage-adapter.ts` - AWS S3 implementation
+- `examples/basic-usage.ts` - Complete workflow example
+- `examples/regenerate-label.ts` - Label regeneration example
+- `examples/firestore-adapter.ts` - Firestore database adapter
+- `examples/firebase-storage-adapter.ts` - Firebase Storage adapter
+
+For other databases (MongoDB, PostgreSQL, etc.), implement the `DatabaseAdapter` interface following the Firestore example as a reference. The adapter pattern is database-agnostic by design.
 
 ## Error Handling
 

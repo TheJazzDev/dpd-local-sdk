@@ -82,7 +82,7 @@ export interface CreateDPDConfigOptions {
   };
 
   labels?: {
-    format?: 'thermal' | 'a4';
+    format?: 'zpl' | 'clp' | 'html';
     printer?: {
       model: string;
       dpi: number;
@@ -112,33 +112,6 @@ export interface CreateDPDConfigOptions {
  *
  * @param options - Configuration options
  * @returns Complete DPD module configuration
- *
- * @example
- * ```typescript
- * const config = createDPDConfig({
- *   credentials: {
- *     accountNumber: process.env.DPD_ACCOUNT_NUMBER!,
- *     username: process.env.DPD_USERNAME!,
- *     password: process.env.DPD_PASSWORD!,
- *   },
- *   business: {
- *     name: "Your Business Name",
- *     collectionAddress: {
- *       organisation: "Your Company",
- *       property: "Unit 1",
- *       street: "123 Main St",
- *       locality: "",
- *       town: "London",
- *       county: "Greater London",
- *       postcode: "SW1A 1AA",
- *       countryCode: "GB",
- *     },
- *     contactName: "Your Name",
- *     contactPhone: "+44...",
- *     contactEmail: "info@yourbusiness.com",
- *   },
- * });
- * ```
  */
 export function createDPDConfig(
   options: CreateDPDConfigOptions
@@ -172,7 +145,7 @@ export function createDPDConfig(
 
   // Default labels
   const defaultLabels = {
-    format: 'thermal' as const,
+    format: 'zpl' as const,
     printer: {
       model: 'TSC-DA210',
       dpi: 203,

@@ -78,7 +78,7 @@ export interface PricingConfig {
 }
 
 export interface LabelConfig {
-  format: 'thermal' | 'a4';
+  format: 'zpl' | 'clp' | 'epl' | 'html';
   printer: {
     model: string; // "TSC-DA210"
     dpi: number; // 203
@@ -340,9 +340,9 @@ export interface CreateShipmentParams {
 
 export interface CreateShipmentResult {
   success: boolean;
-  shipmentId?: string | number; // Required for label generation
-  consignmentNumber?: string; // 10-digit consignment reference
-  parcelNumber?: string; // 14-digit tracking number
+  shipmentId?: string | number;
+  consignmentNumber?: string;
+  parcelNumber?: string;
   trackingUrl?: string;
   labelUrl?: string;
   error?: string;
@@ -350,8 +350,8 @@ export interface CreateShipmentResult {
 }
 
 export interface GenerateLabelParams {
-  shipmentId: string | number; // DPD API requires shipmentId, not consignment number
-  format: 'thermal' | 'a4';
+  shipmentId: string | number;
+  labelFormat: 'zpl' | 'clp' | 'epl' | 'html';
 }
 
 export interface GenerateLabelResult {

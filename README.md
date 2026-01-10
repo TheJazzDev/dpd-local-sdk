@@ -2,7 +2,7 @@
 
 > TypeScript SDK for integrating DPD Local shipping services into your application. Database-agnostic, framework-independent, and production-ready.
 
-[![npm version](https://badge.fury.io/js/%40your-org%2Fdpd-local-sdk.svg)](https://www.npmjs.com/package/@jazzdev/dpd-local-sdk)
+[![npm version](https://badge.fury.io/js/%40jazzdev%2Fdpd-local-sdk.svg)](https://www.npmjs.com/package/@jazzdev/dpd-local-sdk)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3+-blue.svg)](https://www.typescriptlang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -419,29 +419,24 @@ app.post('/api/shipping/create', async (req, res) => {
 });
 ```
 
-## Environment Variables
+## Configuration
 
-```env
-# DPD Credentials (Required)
-DPD_ACCOUNT_NUMBER=your_account_number
-DPD_USERNAME=your_username
-DPD_PASSWORD=your_password
-
-# Encryption (Required in production)
-DPD_ENCRYPTION_KEY=your_32_byte_hex_key
-
-# Optional
-NODE_ENV=production
-```
-
-### Generating Encryption Key
+The SDK requires DPD credentials which you pass directly to the configuration:
 
 ```typescript
-import { generateEncryptionKey } from '@jazzdev/dpd-local-sdk';
-
-const key = generateEncryptionKey();
-console.log('DPD_ENCRYPTION_KEY=' + key);
+const config = createDPDConfig({
+  credentials: {
+    accountNumber: 'YOUR_ACCOUNT_NUMBER',
+    username: 'YOUR_USERNAME',
+    password: 'YOUR_PASSWORD',
+  },
+  business: {
+    // Your business details
+  }
+});
 ```
+
+**Important**: Credentials are passed programmatically - the SDK itself doesn't read from environment variables. How you store and retrieve credentials in your application is up to you.
 
 ## Adapter Examples
 
@@ -498,7 +493,7 @@ import type {
 
 ## Contributing
 
-Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+Contributions are welcome! Please open an issue or submit a pull request on [GitHub](https://github.com/TheJazzDev/dpd-local-sdk).
 
 ## License
 
@@ -507,8 +502,8 @@ MIT © [Taiow Babarinde](https://github.com/TheJazzDev)
 ## Support
 
 - 📧 Email: babsman4all@gmail.com
-- 🐛 Issues: [GitHub Issues](https://github.com/TheJazzDev/dpd-local-sdk.git/issues)
+- 🐛 Issues: [GitHub Issues](https://github.com/TheJazzDev/dpd-local-sdk/issues)
 
 ## Changelog
 
-See [CHANGELOG.md](CHANGELOG.md) for release history.
+See [CHANGELOG.md](https://github.com/TheJazzDev/dpd-local-sdk/blob/main/CHANGELOG.md) for release history.

@@ -47,7 +47,9 @@ npm install pg
 
 ## Configuration
 
-### 1. Environment Variables
+### 1. Store Your DPD Credentials
+
+The SDK requires DPD credentials which you'll pass programmatically. How you store them is up to you - environment variables are recommended:
 
 Create a `.env` file in your project root:
 
@@ -57,24 +59,13 @@ DPD_ACCOUNT_NUMBER=your_account_number
 DPD_USERNAME=your_username
 DPD_PASSWORD=your_password
 
-# Encryption Key (Required in production)
-DPD_ENCRYPTION_KEY=generate_with_generateEncryptionKey()
-
 # Optional
 NODE_ENV=production
 ```
 
-### 2. Generate Encryption Key
+**Important**: The SDK itself doesn't read these environment variables. You'll pass them to the SDK configuration in your code.
 
-Run this once to generate your encryption key:
-
-```typescript
-import { generateEncryptionKey } from '@jazzdev/dpd-local-sdk';
-
-console.log('DPD_ENCRYPTION_KEY=' + generateEncryptionKey());
-```
-
-### 3. Create DPD Configuration
+### 2. Create DPD Configuration
 
 Create a configuration file (e.g., `lib/dpd-config.ts`):
 

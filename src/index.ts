@@ -5,8 +5,8 @@
  * Database-agnostic and framework-independent
  *
  * @package @jazzdev/dpd-local-sdk
- * @version 1.0.0
- * @author Your Name
+ * @version 1.0.12
+ * @author Taiow Babarinde <babsman4all@gmail.com>
  * @license MIT
  */
 
@@ -79,16 +79,6 @@ export {
 // ============================================================================
 // Utilities
 // ============================================================================
-
-export {
-  encrypt,
-  decrypt,
-  encryptCredentials,
-  decryptCredentials,
-  generateEncryptionKey,
-  hash,
-  verifyHash,
-} from './utils/encryption';
 
 export {
   configureLogger,

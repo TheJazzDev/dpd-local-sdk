@@ -2,11 +2,12 @@
  * DPD Shipping Module - Authentication Service
  *
  * Handles DPD API authentication using GeoSession
- * Manages token caching and refresh
+ * Manages token caching and refresh with optional persistent storage
  */
 
 import { DPD_API } from "../config";
-import type { DPDCredentials } from "../types";
+import type { DPDCredentials, GeoSessionStorage } from "../types";
+import { InMemoryGeoSessionStorage } from "../types";
 
 // ============================================================================
 // In-Memory Token Cache
@@ -384,6 +385,247 @@ export async function testConnection(
 }
 
 // ============================================================================
+// Geo Session Manager (New Adapter-Based Approach)
+// ============================================================================
+
+/**
+ * Geo Session Manager with adapter pattern
+ *
+ * Manages DPD geo session lifecycle with persistent storage support.
+ * Handles authentication, caching, refresh logic, and automatic retries.
+ *
+ * @example Basic Usage (In-Memory)
+ * ```typescript
+ * const manager = new GeoSessionManager(credentials);
+ * const session = await manager.getValidGeoSession();
+ * ```
+ *
+ * @example With Persistent Storage (Firestore)
+ * ```typescript
+ * const storage: GeoSessionStorage = {
+ *   async get() { ... },
+ *   async set(session, expiry) { ... },
+ *   async clear() { ... }
+ * };
+ * const manager = new GeoSessionManager(credentials, storage);
+ * const session = await manager.getValidGeoSession();
+ * ```
+ */
+export class GeoSessionManager {
+  private credentials: DPDCredentials;
+  private storage: GeoSessionStorage;
+  private maxRetries: number;
+  private baseRetryDelay: number;
+
+  /**
+   * Create a new Geo Session Manager
+   *
+   * @param credentials - DPD API credentials
+   * @param storage - Storage adapter for persistence (optional, defaults to in-memory)
+   * @param options - Configuration options
+   */
+  constructor(
+    credentials: DPDCredentials,
+    storage?: GeoSessionStorage,
+    options?: {
+      maxRetries?: number;
+      baseRetryDelay?: number;
+    }
+  ) {
+    this.credentials = credentials;
+    this.storage = storage || new InMemoryGeoSessionStorage();
+    this.maxRetries = options?.maxRetries ?? 3;
+    this.baseRetryDelay = options?.baseRetryDelay ?? 2000; // 2 seconds
+  }
+
+  /**
+   * Get a valid geo session token
+   *
+   * - Loads from persistent storage if available and valid
+   * - Automatically refreshes if expired or not found
+   * - Retries with exponential backoff on failure
+   * - Saves to persistent storage after refresh
+   *
+   * @returns Valid geo session token
+   * @throws Error if authentication fails after retries
+   */
+  async getValidGeoSession(): Promise<string> {
+    try {
+      // Step 1: Try to load from storage
+      const stored = await this.storage.get();
+
+      if (stored && this.isSessionValid(stored.geoSession, stored.expiry)) {
+        console.log('✅ Using cached geo session from storage');
+        return stored.geoSession;
+      }
+
+      // Step 2: Need new session - authenticate with retry logic
+      console.log('🔄 Fetching new geo session from DPD API...');
+
+      const { geoSession, expiry } = await this.authenticateWithRetry();
+
+      console.log('✅ Successfully fetched new geo session');
+
+      // Step 3: Save to storage
+      await this.storage.set(geoSession, expiry);
+
+      return geoSession;
+    } catch (error) {
+      console.error("❌ Error managing geo session:", error);
+      throw new Error(
+        `Failed to get valid geo session: ${error instanceof Error ? error.message : "Unknown error"}`
+      );
+    }
+  }
+
+  /**
+   * Force refresh the geo session
+   * Clears cache and fetches a new token
+   *
+   * @returns New geo session token
+   */
+  async refreshGeoSession(): Promise<string> {
+    await this.storage.clear();
+    return this.getValidGeoSession();
+  }
+
+  /**
+   * Clear stored geo session
+   */
+  async clearGeoSession(): Promise<void> {
+    await this.storage.clear();
+  }
+
+  /**
+   * Check if a session is valid
+   */
+  private isSessionValid(geoSession: string | null, expiry: Date | null): boolean {
+    if (!geoSession || !expiry) {
+      return false;
+    }
+
+    const now = new Date();
+    const expiryDate = expiry instanceof Date ? expiry : new Date(expiry);
+
+    // Check if expired
+    if (expiryDate <= now) {
+      return false;
+    }
+
+    // DPD recommendation: Refresh at start of each day
+    // Check if expiry is today but we should refresh for the new day
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const expiryStartOfDay = new Date(
+      expiryDate.getFullYear(),
+      expiryDate.getMonth(),
+      expiryDate.getDate()
+    );
+
+    // If expiry is today, check if session is over 12 hours old
+    if (expiryStartOfDay.getTime() === startOfToday.getTime()) {
+      // DPD sessions last 90 minutes, so if we're starting a new day, refresh
+      const sessionCreatedAt = new Date(expiryDate.getTime() - 90 * 60 * 1000);
+      const hoursSinceCreation = (now.getTime() - sessionCreatedAt.getTime()) / (1000 * 60 * 60);
+
+      if (hoursSinceCreation > 12) {
+        return false; // Refresh if session is over 12 hours old
+      }
+    }
+
+    return true;
+  }
+
+  /**
+   * Authenticate with retry logic and exponential backoff
+   */
+  private async authenticateWithRetry(): Promise<{ geoSession: string; expiry: Date }> {
+    let lastError: Error | null = null;
+
+    for (let attempt = 1; attempt <= this.maxRetries; attempt++) {
+      try {
+        console.log(`📡 Attempt ${attempt}/${this.maxRetries} to fetch geo session...`);
+
+        const geoSession = await this.authenticate();
+        const expiry = new Date(Date.now() + 90 * 60 * 1000); // 90 minutes
+
+        return { geoSession, expiry };
+      } catch (error) {
+        lastError = error as Error;
+        console.error(`❌ Attempt ${attempt}/${this.maxRetries} failed:`, error);
+
+        if (attempt < this.maxRetries) {
+          // Calculate delay with exponential backoff: 2s, 4s, 8s
+          const delay = this.baseRetryDelay * Math.pow(2, attempt - 1);
+          console.log(`⏳ Retrying in ${delay}ms...`);
+          await this.delay(delay);
+        }
+      }
+    }
+
+    // All retries failed
+    throw new Error(
+      `Failed to authenticate after ${this.maxRetries} attempts: ${lastError?.message || "Unknown error"}`
+    );
+  }
+
+  /**
+   * Authenticate with DPD API
+   */
+  private async authenticate(): Promise<string> {
+    const { username, password } = this.credentials;
+    const authHeader = Buffer.from(`${username}:${password}`).toString("base64");
+
+    const response = await fetch(`${DPD_API.BASE_URL}${DPD_API.ENDPOINTS.AUTH}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        Authorization: `Basic ${authHeader}`,
+      },
+      signal: AbortSignal.timeout(DPD_API.TIMEOUT),
+    });
+
+    const raw = await response.text();
+
+    let payload: any;
+    try {
+      payload = raw ? JSON.parse(raw) : null;
+    } catch {
+      if (!response.ok) {
+        throw new Error(`Authentication failed: ${raw || response.statusText}`);
+      }
+      throw new Error("Invalid JSON response from DPD API");
+    }
+
+    if (!response.ok) {
+      throw new Error(
+        payload?.error?.errorMessage ??
+          `Authentication failed: ${response.status} ${response.statusText}`,
+      );
+    }
+
+    if (payload?.error) {
+      throw new Error(payload.error.errorMessage ?? "Authentication failed");
+    }
+
+    const geoSession = payload?.data?.geoSession;
+
+    if (!geoSession) {
+      throw new Error("No GeoSession token received from DPD");
+    }
+
+    return geoSession;
+  }
+
+  /**
+   * Delay helper for retry backoff
+   */
+  private delay(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+}
+
+// ============================================================================
 // Export
 // ============================================================================
 
@@ -395,4 +637,5 @@ export default {
   getTokenExpiry,
   authenticatedRequest,
   testConnection,
+  GeoSessionManager,
 };

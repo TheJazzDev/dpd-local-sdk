@@ -5,7 +5,7 @@
  * Database-agnostic and framework-independent
  *
  * @package @jazzdev/dpd-local-sdk
- * @version 1.0.12
+ * @version 1.1.0
  * @author Taiow Babarinde <babsman4all@gmail.com>
  * @license MIT
  */
@@ -49,6 +49,7 @@ export {
   getTokenExpiry,
   authenticatedRequest,
   testConnection,
+  GeoSessionManager,
 } from './lib/auth';
 
 export {

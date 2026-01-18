@@ -424,3 +424,86 @@ export interface LogFilters {
   endDate?: Date;
   limit?: number;
 }
+
+// ============================================================================
+// Geo Session Storage Adapter
+// ============================================================================
+
+/**
+ * Storage adapter interface for persisting geo session tokens
+ *
+ * Implement this interface to provide persistent storage for geo sessions
+ * across application restarts. Supports any storage backend (Firestore,
+ * Redis, PostgreSQL, file system, etc.)
+ *
+ * @example Firestore Implementation
+ * ```typescript
+ * const firestoreStorage: GeoSessionStorage = {
+ *   async get() {
+ *     const doc = await firestore.collection('config').doc('dpd').get();
+ *     const data = doc.data();
+ *     return data?.geoSession ? {
+ *       geoSession: data.geoSession,
+ *       expiry: new Date(data.geoSessionExpiry)
+ *     } : null;
+ *   },
+ *   async set(geoSession, expiry) {
+ *     await firestore.collection('config').doc('dpd').set({
+ *       geoSession,
+ *       geoSessionExpiry: expiry.toISOString()
+ *     }, { merge: true });
+ *   },
+ *   async clear() {
+ *     await firestore.collection('config').doc('dpd').update({
+ *       geoSession: null,
+ *       geoSessionExpiry: null
+ *     });
+ *   }
+ * };
+ * ```
+ */
+export interface GeoSessionStorage {
+  /**
+   * Get stored geo session and expiry
+   * @returns Stored session data or null if not found/expired
+   */
+  get(): Promise<{ geoSession: string; expiry: Date } | null>;
+
+  /**
+   * Store geo session and expiry
+   * @param geoSession - The geo session token
+   * @param expiry - Expiry date/time
+   */
+  set(geoSession: string, expiry: Date): Promise<void>;
+
+  /**
+   * Clear stored geo session
+   */
+  clear(): Promise<void>;
+}
+
+/**
+ * In-memory storage adapter (default, no persistence)
+ * Session will be lost on application restart
+ */
+export class InMemoryGeoSessionStorage implements GeoSessionStorage {
+  private geoSession: string | null = null;
+  private expiry: Date | null = null;
+
+  async get(): Promise<{ geoSession: string; expiry: Date } | null> {
+    if (!this.geoSession || !this.expiry) {
+      return null;
+    }
+    return { geoSession: this.geoSession, expiry: this.expiry };
+  }
+
+  async set(geoSession: string, expiry: Date): Promise<void> {
+    this.geoSession = geoSession;
+    this.expiry = expiry;
+  }
+
+  async clear(): Promise<void> {
+    this.geoSession = null;
+    this.expiry = null;
+  }
+}
